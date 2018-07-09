@@ -1,10 +1,11 @@
-# Project Title
+# SlipBuddy
 
-One Paragraph of project description goes here
+SlipBuddy is a mobile health application that tracks overeating behavior, and uses machine learning to predict and prevent overeating
 
-## Getting Started
+## Abstract
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+A user study was conducted to evaluate SlipBuddy’ efficacy. However, user studies are limited in terms of number of participants and data collected from each participant. This project investigated using synthetic data to enhance predictive performance of the real data collected in the user study. The process started with generating synthetic data that follow the same distribution of the original observed data and preserve the correlation between predictors and overeating behavior. Then machine learning techniques were applied to three separate datasets: the original data, the synthetic data, and the original and synthetic data combined. The predictive performance of the resulting machine learning models were compared, and the statistical significance of the results evaluated. Future work will investigate alternative synthetic data generation methods, and new ways of leveraging synthetic data in machine learning. 
+
 
 ### Prerequisites
 
