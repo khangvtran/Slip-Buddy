@@ -18,7 +18,9 @@ RStudio
 ```
 
 ## Poster
-The poster is presented as the final symposium. It contains brief explanation, visualization, and is the best way to understand this research on a high level perspective
+The poster is presented as the final symposium. It gives a brief presentation of SlipBuddy funtionality, synthethic data generation process, the cross validation of different training compilation, and visualization.
+
+Please proceed to this link and download the poster in pdf format.
 
 [Posters](poster)
 
