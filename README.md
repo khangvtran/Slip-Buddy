@@ -1,6 +1,9 @@
 # SlipBuddy
 
-SlipBuddy is a mobile health application that tracks overeating behavior, and uses machine learning to predict and prevent overeating
+SlipBuddy is a mobile health application that tracks overeating behavior, and uses machine learning to predict and prevent overeating. 
+
+[SlipBuddy from WPI news](https://www.wpi.edu/news/put-cookie-down-wpi-and-uconn-researchers-create-app-predict-and-intervene-users-overeating "SlipBuddy from WPI news page")
+
 
 ## Abstract
 
@@ -9,10 +12,9 @@ A user study was conducted to evaluate SlipBuddy’ efficacy. However, user stud
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
-
 ```
-Give examples
+iPython Jupyter Notebook
+RStudio
 ```
 
 ### Installing
