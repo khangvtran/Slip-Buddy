@@ -1,0 +1,243 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504\cocoasubrtf830
+{\fonttbl\f0\fnil\fcharset0 Georgia;\f1\fnil\fcharset0 Verdana;\f2\froman\fcharset0 Times-Roman;
+\f3\fmodern\fcharset0 Courier;\f4\ftech\fcharset77 Symbol;}
+{\colortbl;\red255\green255\blue255;\red26\green26\blue26;\red255\green255\blue255;\red117\green117\blue117;
+\red52\green52\blue52;\red26\green72\blue116;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c13333\c13333\c13333;\cssrgb\c100000\c100000\c100000;\cssrgb\c53333\c53333\c53333;
+\cssrgb\c26667\c26667\c26667;\cssrgb\c12549\c35686\c52941;\cssrgb\c0\c0\c0;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid1\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid101\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid2}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
+\margl1440\margr1440\vieww18460\viewh14240\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs72 \cf2 \cb3 \expnd0\expndtw0\kerning0
+What does a generalized linear model do?\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f1\i\fs22 \cf4 \cb3 August 15, 2012\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\i0 \cf5 \cb3 By {\field{\*\fldinst{HYPERLINK "https://www.r-bloggers.com/author/john-mount/"}}{\fldrslt \cf6 John Mount}}\cb1 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs28 \cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 What does a generalized linear model do? {\field{\*\fldinst{HYPERLINK "http://cran.r-project.org/"}}{\fldrslt \cf6 R}} supplies a modeling function called 
+\f3 glm()
+\f2  that fits generalized linear models (abbreviated as GLMs). A natural question is what does it do and what problem is it solving for you? We work some examples and place generalized linear models in context with other techniques.For predicting a categorical outcome (such as y = true/false) it is often advised to use a form of GLM called a {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2010/11/learn-a-powerful-machine-learning-tool-logistic-regression-and-beyond/"}}{\fldrslt \cf6 logistic regression}} instead of a standard linear regression. The obvious question is: what is does the logistic regression do? We will explain what problem the logistic regression is trying to solve.\cb1 \
+\cb3 Consider the following trivial artificial R data set:\cb1 \
+\
+
+\f3 \cb3 > d <- read.table(file='{\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/dfiles/glmLoss/dGLMdat.csv"}}{\fldrslt \cf6 http://www.win-vector.com/dfiles/glmLoss/dGLMdat.csv}}',\
+    header=T,sep=',')\
+> d\
+            x1          x2     y\
+1   0.09793624 -0.50020073 FALSE\
+2  -0.54933361  0.00834841  TRUE\
+3   0.18499020 -0.79325364  TRUE\
+4   0.58316450  2.06501637  TRUE\
+5   0.09607855  0.42724062  TRUE\
+6  -0.44772937  0.23267758 FALSE\
+7   1.24981165 -0.24492799  TRUE\
+8   0.13378532 -0.21985529  TRUE\
+9   0.41987141 -0.63677825 FALSE\
+10  1.28558918  1.37708143 FALSE\
+11  0.32590303  0.90813181  TRUE\
+12  0.01148262 -1.35426485 FALSE\
+13 -0.98502686  1.85317024  TRUE\
+14 -0.23017795 -0.06923035 FALSE\
+15  1.29606888 -0.80930538  TRUE\
+16  0.31286797  0.21319610  TRUE\
+17  0.03766960 -1.13314348  TRUE\
+18  0.03662855  0.67440240 FALSE\
+19  1.62032558 -0.57165979  TRUE\
+20 -0.63236983 -0.30736577 FALSE\
+> \
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 We can use R to fit a linear model that uses x1 and x2 to try and predict y:\cb1 \
+\
+
+\f3 \cb3 >  lm(y~x1+x2,data=d)\
+\
+Call:\
+lm(formula = y ~ x1 + x2, data = d)\
+\
+Coefficients:\
+(Intercept)           x1           x2  \
+    0.55548      0.16614      0.07599  \
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 Behind the scenes R encodes 
+\f3 y=true
+\f2  as 1 and 
+\f3 y=false
+\f2  as 0 (this is called encoding with an indicator). Then a standard linear regression is performed to try and predict these values. A linear model (in this {\field{\*\fldinst{HYPERLINK "http://rd.bizrate.com/rd?t=http%3A%2F%2Fstore.hp.com%2Fus%2Fen%2Fpdp%2Ftimbuk2-classic-carrying-case-%28messenger%29-for-bottle--file--pen--cell-phone--accessories---jet-black%3Fjumpid%3Dcs_con_ac_nm%26prodsku%3D4T9891%26utm_medium%3Dcs%26utm_source%3Dcx%26utm_campaign%3Dconnexity%26utm_content%3Dsp%26utm_content%3Dsp%26adid%3D%7BAdID%7D%26addisttype%3D%7BifSearch%3As%7D%7BIfNative%3An%7Dpla%26CAWELAID%3D120281700000308864%26szredirectid%3DSZ_REDIRECT_ID&mid=31981&cat_id=10010300&atom=10269&prod_id=&oid=7432393452&pos=1&b_id=18&bid_type=8&bamt=dc33d25e4dadea0e&cobrand=1&ppr=846c5feb4bba8a0b&rf=af1&af_assettype_id=12&af_creative_id=2973&af_id=615103&af_placement_id=1&dv=2a494aa77ec2a0d3180fb3f2524cdacc"}}{\fldrslt \cf6 case}}) is a formula of the form a + b*x1 + c*x2 = y. Standard least squares linear regression picks a,b and c to minimize the sum of (a + b*x1 + c*x2 \'96 y)^2 over all of the training data. In general a standard result that this \'93minimum square loss model\'94 linear regression is also (under fairly general conditions) a \'93maximum likelihood model\'94 (the model that considers the training data least surprising).\cb1 \
+\cb3 For general data this has the slight disadvantage that the model can be penalized for being \'93too right\'94. Predicting \'932
+\f4 \uc0\u8243 
+\f2  when the answer is \'931
+\f4 \uc0\u8243 
+\f2  is considered (in terms of training error) to be just as bad as predicting \'930
+\f4 \uc0\u8243 
+\f2  when the answer is \'931.\'94 Also it is well know that truely {\field{\*\fldinst{HYPERLINK "http://en.wikipedia.org/wiki/Binomial_distribution"}}{\fldrslt \cf6 binomially distributed}} data is {\field{\*\fldinst{HYPERLINK "http://en.wikipedia.org/wiki/Heteroscedasticity"}}{\fldrslt \cf6 heteroscedastic}} because in a situation where our binomial outcome has probability p of coding to 1 the indicator has a variance of p*(1-p). Thus if p is varying over our data (which is one of the assumptions driving the attempt to build any sort of model) then we have the expected observations errors are a function of the observation values (which causes problems when fitting and when attempting to interpret coefficient significances). A first pass fix is to apply a 
+\i stabilizing transform
+\i0  like sqrt() or {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2012/03/modeling-trick-the-signed-pseudo-logarithm/"}}{\fldrslt \cf6 arcsinh()}} ( see for example: \'93The transformation of Poisson, binomial and negative-binomial data\'94, FJ Anscombe, Biometrika, 1948 vol. 35 (3) pp. 246-254 ) which have the amazing property that they can make the observed variance nearly constant over a wide range of p (and therefore nearly independent of the expectation, as we want). However, for all of these corrections when fitting a linear model to a categorical outcome you are still overly dependent on the details of how you encoded that outcome as an indicator.\cb1 \
+\cb3 The next thing to try is a generalized linear model. A generalized linear model (in this {\field{\*\fldinst{HYPERLINK "http://rd.bizrate.com/rd?t=http%3A%2F%2Fstore.hp.com%2Fus%2Fen%2Fpdp%2Ftimbuk2-classic-carrying-case-%28messenger%29-for-bottle--file--pen--cell-phone--accessories---jet-black%3Fjumpid%3Dcs_con_ac_nm%26prodsku%3D4T9891%26utm_medium%3Dcs%26utm_source%3Dcx%26utm_campaign%3Dconnexity%26utm_content%3Dsp%26utm_content%3Dsp%26adid%3D%7BAdID%7D%26addisttype%3D%7BifSearch%3As%7D%7BIfNative%3An%7Dpla%26CAWELAID%3D120281700000308864%26szredirectid%3DSZ_REDIRECT_ID&mid=31981&cat_id=10010300&atom=10269&prod_id=&oid=7432393452&pos=1&b_id=18&bid_type=8&bamt=dc33d25e4dadea0e&cobrand=1&ppr=846c5feb4bba8a0b&rf=af1&af_assettype_id=12&af_creative_id=2973&af_id=615103&af_placement_id=1&dv=2a494aa77ec2a0d3180fb3f2524cdacc"}}{\fldrslt \cf6 case}}) fits s(a + b*x1 + c*x2) = y. For logistic regression we have s(z) = 1/(1+e^\{-z\}). This s(), called the sigmoid, has the following desirable properties:\cb1 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0\cf0 \cb3 \kerning1\expnd0\expndtw0 {\listtext	1	}\expnd0\expndtw0\kerning0
+s(-Infinity) = 0\cb1 \
+\ls1\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	2	}\expnd0\expndtw0\kerning0
+s(Infinity) = 1\cb1 \
+\ls1\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	3	}\expnd0\expndtw0\kerning0
+s(0) = 1/2\cb1 \
+\ls1\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	4	}\expnd0\expndtw0\kerning0
+s(-x) = 1 \'96 s(x)\cb1 \
+\ls1\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	5	}\expnd0\expndtw0\kerning0
+x > y implies s(x) > s(y)\cb1 \
+\ls1\ilvl0\cb3 \kerning1\expnd0\expndtw0 {\listtext	6	}\expnd0\expndtw0\kerning0
+s\'92(x) = s(x) (1 \'96 s(x))\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 So we certainly can no longer over-run our target y: s(x) \uc0\u8804  1 for all x, so we can\'92t ever be penalized for returning a prediction of 2. Thus all of the degrees of freedom or error budget can be used during fitting to try and address other (more important) fitting problems. To perform a logistic regression in R we just do the following:\cb1 \
+\
+
+\f3 \cb3 m <- glm(y~x1+x2,data=d,family=binomial(link='logit'))\
+summary(m)\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 What this does is fit a maximum likelihood model to our data. That is a model that supplies probabilities for each datum and the product of all the predicted probabilities is least surprising (so the model tends to predict high values on y=true examples and low values on y=false examples). As discussed in {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2011/09/the-simpler-derivation-of-logistic-regression/"}}{\fldrslt \cf6 the simpler derivation of logistic regression}} this is equivalent to finding the a,b and c such that maximize the product given by multiplying in a term of the form s(a + b*x1 + c*x2) for each positive example and multiplying in a term of the form (1 \'96 s(a + b*x1 + c*x2)) for each negative example. Or in equations: the maximum likelihood solution picks a,b and c to maximize the following product over all training data:\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 {{\NeXTGraphic product.png \width8000 \height800 \noorient
+}¬}\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 <img style="display:block; margin-left:auto; margin-right:auto;" src="{\field{\*\fldinst{HYPERLINK "https://i2.wp.com/www.win-vector.com/blog/wp-content/uploads/2012/05/product.png?resize=400%2C40"}}{\fldrslt \cf6 https://i2.wp.com/www.win-vector.com/blog/wp-content/uploads/2012/05/product.png?resize=400%2C40}}" alt="Product" title="product.png" border="0" data-recalc-dims="1" />\cb1 \
+\cb3 That is: it picks the coefficients a,b and c so the training data is most consistent with the model (or least shocking given the model).\cb1 \
+\cb3 Notice this is not the same as minimizing the square loss (as we did for linear regression):\cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 {{\NeXTGraphic sum.png \width6620 \height800 \noorient
+}¬}\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 <img style="display:block; margin-left:auto; margin-right:auto;" src="{\field{\*\fldinst{HYPERLINK "https://i0.wp.com/www.win-vector.com/blog/wp-content/uploads/2012/05/sum.png?resize=331%2C40"}}{\fldrslt \cf6 https://i0.wp.com/www.win-vector.com/blog/wp-content/uploads/2012/05/sum.png?resize=331%2C40}}" alt="Sum" title="sum.png" border="0" data-recalc-dims="1" />\cb1 \
+\cb3 One great feature of linear regression that under fairly general conditions: the maximum likelihood solution is also the minimum square-loss solution. This breaks down for models of other forms (like logistic regression). We will continue our numeric example just to show the two solutions are not the same for logistic regression. The reason we work an example is statistics in general is hard to write about (as when you write about it you are managing many different concerns: data, model form and error). And statistics write-ups are even harder to read (as a lot of statistical writing claims to solve all problems at once which means authors tend not to admit to choices and trade-offs). So instead of trying to think through all possible intents we work a toy example (and given we run into complications in the toy example, you can be assured things are even more complicated once we expose techniques to real data).\cb1 \
+\cb3 Because many people (sometimes including this author) mis-remember GLMs as minimizing loss or transformed loss we continue with our worked example. {\field{\*\fldinst{HYPERLINK "http://rover.ebay.com/rover/13/0/19/DealFrame/DealFrame.cmp?bm=316&BEFID=96392&acode=292&code=292&aon=&crawler_id=532299&dealId=mVncED0hAnISrJ9IertAIg%3D%3D&searchID=&url=https%3A%2F%2Fwww.newfrog.com%2Fp%2F3-5mm-in-ear-earphone-headset-for-samsung-galaxy-note-n7000-s-ii-i9100-nexus-i9250-32749.html%3Fcurrency%3DUSD%26ebay&DealName=3.5mm%20In%20Ear%20Earphone%20Headset%20for%20Samsung%20Galaxy%20Note%20N7000%20S%20II%20i9100%20Nexus%20i9250&MerchantID=532299&HasLink=yes&category=0&AR=-1&NG=1&GR=1&ND=1&PN=1&RR=-1&ST=&MN=msnFeed&FPT=SDCF&NDS=1&NMS=1&NDP=1&MRS=&PD=0&brnId=2455&lnkId=8070676&Issdt=170622051305&IsFtr=0&IsSmart=0&dlprc=2.62&SKU=55976"}}{\fldrslt \cf6 Note}} that the balance equations (or the gradient of the logarithm of the likelihood equation, discussed in {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2011/09/the-simpler-derivation-of-logistic-regression/"}}{\fldrslt \cf6 the simpler derivation of logistic regression}}) are obeyed in R\'92s solution:\cb1 \
+\
+
+\f3 \cb3 d$s <- predict(m,type='response')\
+sum(with(d,2*(s-y)))\
+sum(with(d,2*(s-y)*x1))\
+sum(with(d,2*(s-y)*x2))\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 gives us:\cb1 \
+\
+
+\f3 \cb3 [1] -1.050271e-12\
+[1] -1.173884e-12\
+[1] -7.624248e-13\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 all very near zero (as expected).\cb1 \
+\cb3 However, the square-loss has its own gradient which implies its own balance equations. These new square loss balance equations are not obeyed. The new checks (which are just the derivative of the loss function with respect to each of the parameters a,b,c) are:\cb1 \
+\
+
+\f3 \cb3 sum(with(d,2*(s-y)*s*(1-s)))\
+sum(with(d,2*(s-y)*s*(1-s)*x1))\
+sum(with(d,2*(s-y)*s*(1-s)*x2))\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 and are not that close to zero:\cb1 \
+\
+
+\f3 \cb3 [1] -0.05593889\
+[1] -0.09833072\
+[1] -0.2266276\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 We can further confirm the optimal solution the square loss conditions is different than the maximum likelihood solution by going ahead and finding the square loss solution (so we can compare it to the maximum likelihood solution we already have). Define a function 
+\f3 f()
+\f2  that computes the square-loss of given estimate:\cb1 \
+\
+
+\f3 \cb3 s <- function(z) \{ 1/(1+exp(-z)) \}\
+p <- function(x) \{ s(x[1] + x[2]*d$x1 + x[3]*d$x2) \}\
+f <- function(x) \{\
+   v <- p(x)\
+   d <- v-d$y\
+   sum(d*d)\
+\}\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 We confirm that this computes the square-loss correctly for the logistic solution:\cb1 \
+\
+
+\f3 \cb3 f(m$coefficients)\
+m$coefficients\
+sum(with(d,(y-s)*(y-s)))\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 yields (as expected);\cb1 \
+\
+
+\f3 \cb3 (Intercept)          x1          x2 \
+  0.2415262   0.7573462   0.3529519 \
+[1] 4.416638\
+[1] 4.416638\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 We now derive and plug in our modified coefficients and show the lower square loss:\cb1 \
+\
+
+\f3 \cb3 opt <- optim(m$coefficients,f,,method='CG')  # default optimizer failed to optimize\
+opt$par\
+f(opt$par)\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 yielding:\cb1 \
+\
+
+\f3 \cb3 (Intercept)          x1          x2 \
+  0.3156930   1.3125616   0.8139712 \
+[1] 4.34706\
+\pard\pardeftab720\partightenfactor0
+
+\f2 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3 which is a lower total square loss than our original 4.42. This confirms the two solutions (the one that maximizes likelihood and the one that minimizes square loss) are not the same for logistic regression.\cb1 \
+\cb3 The overall summary is: You can first try linear regression. If this is not appropriate for your problem you can then try pre-transforming your y-data (a {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2012/03/modeling-trick-the-signed-pseudo-logarithm/"}}{\fldrslt \cf6 log-like}} or logit transform) and seeing if that fits better. However, if you transform your y-data you are using a new error model (in the transformed space such as log(y)-units instead of y-units, this can be better or can be worse depending on your situation). If this error model is not appropriate you can move on to a generalized linear model. However, the generalized linear model does not minimize square error in y-units but maximizes data likelihood under the chosen model. The distinction is mostly technical and maximum likelihood is often a good objective (so you should be willing to give up your original square-loss objective). If you wan\'92t to go further still you can try a {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2011/02/the-cranky-guide-to-trying-r-packages/"}}{\fldrslt \cf6 generalized additive model}} which in addition to re-shaping the y distribution uses splines to learn {\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2012/07/modeling-trick-masked-variables/"}}{\fldrslt \cf6 re-shapings}} of the x-data.\cb1 \
+\cb3 Related posts:\cb1 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0\cf6 \cb3 \kerning1\expnd0\expndtw0 {\listtext	1	}{\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2012/08/how-robust-is-logistic-regression/"}}{\fldrslt \expnd0\expndtw0\kerning0
+How robust is logistic regression?}}\cf0 \cb1 \expnd0\expndtw0\kerning0
+\
+\ls2\ilvl0\cf6 \cb3 \kerning1\expnd0\expndtw0 {\listtext	2	}{\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2012/07/modeling-trick-impact-coding-of-categorical-variables-with-many-levels/"}}{\fldrslt \expnd0\expndtw0\kerning0
+Modeling Trick: Impact Coding of Categorical Variables with Many Levels}}\cf0 \cb1 \expnd0\expndtw0\kerning0
+\
+\ls2\ilvl0\cf6 \cb3 \kerning1\expnd0\expndtw0 {\listtext	3	}{\field{\*\fldinst{HYPERLINK "http://www.win-vector.com/blog/2011/09/the-simpler-derivation-of-logistic-regression/"}}{\fldrslt \expnd0\expndtw0\kerning0
+The Simpler Derivation of Logistic Regression}}\cf0 \cb1 \expnd0\expndtw0\kerning0
+\
+}
