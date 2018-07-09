@@ -1,0 +1,6 @@
+"Accuracy","AccuracySynth","AccuracySynthCombined","Precision","PrecisionSynth","PrecisionSynthCombined","Recall","RecallSynth","RecallSynthCombined","Fallout","FalloutSynth","FalloutSynthCombined","FMeasure","FMeasureSynth","FMeasureSynthCombined","AUC","AUCSynth","AUCSynthCombined"
+0.875,0.875,0.875,NA,NA,NA,0,0,0,0,0,0,NA,NA,NA,0.5,0.5,0.5
+0.875,0.938,0.875,NA,1,0.5,0,0.5,0.5,0,0,0.071,NA,0.667,0.5,0.5,0.75,0.714
+0.875,0.875,0.875,NA,NA,NA,0,0,0,0,0,0,NA,NA,NA,0.5,0.5,0.5
+0.824,0.765,0.824,NA,0,0.5,0,0,0.333,0,0.071,0.071,NA,NA,0.4,0.5,0.464,0.631
+0.875,0.875,0.875,NA,NA,NA,0,0,0,0,0,0,NA,NA,NA,0.5,0.5,0.5

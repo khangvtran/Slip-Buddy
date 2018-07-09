@@ -75,7 +75,6 @@ adjustEpisode <- function(syn)
 
 ```{r}
 path = "/Users/KVTran/Documents/Research/SlipBuddy/Individual_Patient/patientID_8.csv"
-'/Users/KVTran/Documents/Research/SlipBuddy/data/Individual_Patient/patientID_8.csv/'
 ods = prepareODS(path)
 ods = as.data.frame(ods)
 ods <- adjustEpisode(ods)
