@@ -73,7 +73,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
-## Authors 
+## Researchers 
 
 * **Khang V. Tran** - *Machine Learning - Researcher* - [LinkedIn](https://www.linkedin.com/in/khang-vinh-tran/)
 * **Kate Finnerty** - *Text Mining - Co-Researcher* - [LinkedIn](https://www.linkedin.com/in/finnertyk/)
@@ -86,7 +86,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* This research was funded by the National Science Foundation (NSF) through the REU SITE: Data science research for safe, sustainable and healthy communities (CNS – 1560229)
+* This research was also conducted with the support and insightful feedback of Cole Polychronis, Brendan Foley, Caitlin Kuhlman, Quyen Hoang, Charan Sankaran, Vanshika Chowdhary, and Professor Begisu Tulu from WPI.
+
 
