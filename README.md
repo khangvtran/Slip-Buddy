@@ -22,8 +22,9 @@ The poster is presented as the final symposium. It gives a brief presentation of
 
 Please proceed to this link and download the poster in pdf format.
 
+```
 [Posters](poster)
-
+```
 
 ## Researchers 
 
