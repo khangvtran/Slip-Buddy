@@ -479,38 +479,27 @@ fancyRpartPlot(tree)
 # VISUALLIZATION FOR THE POSTER - KNN #
 ########################################
 ```{r}
-library(sp) 
-library("GeNetIt")
-data(ralu.site)
+library(ElemStatLearn)
+require(class)
+x <- mixture.example$x
+g <- mixture.example$y
+xnew <- mixture.example$xnew
+mod15 <- knn(x, xnew, g, k=15, prob=TRUE)
+prob <- attr(mod15, "prob")
+prob <- ifelse(mod15=="1", prob, 1-prob)
+px1 <- mixture.example$px1
+px2 <- mixture.example$px2
+prob15 <- matrix(prob, length(px1), length(px2))
+par(mar=rep(2,4))
+contour(px1, px2, prob15, levels=0.5, labels="", xlab="", ylab="", main=
+        "15-nearest neighbour", axes=FALSE)
+points(x, col=ifelse(g==1, "coral", "cornflowerblue"))
+gd <- expand.grid(x=px1, y=px2)
+points(gd, pch=".", cex=1.2, col=ifelse(prob15>0.5, "coral", "cornflowerblue"))
+box()
 
- # Saturated spatial graph
-sat.graph <- knn.graph(ralu.site, row.names=ralu.site@data[,"SiteName"])
-head(sat.graph@data)
- 
- # Distanced constrained spatial graph
- dist.graph <- knn.graph(ralu.site, row.names=ralu.site@data[,"SiteName"], max.dist = 5000)
 
- par(mfrow=c(1,2))	
-plot(sat.graph, col="grey")
-  points(ralu.site, col="red", pch=20, cex=1.5)
-     box()
-     title("Saturated graph")	
-plot(dist.graph, col="grey")
-  points(ralu.site, col="red", pch=20, cex=1.5)
-     box()
-     title("Distance constrained graph")	
 
-head(ralu.site)
-ralu.site@data[,"SiteName"]
-ralu.site@data
-dim(ralu.site)
-length(ralu.site@data[,"SiteName"])
-dim(train)
-length(train[,11])
-
-train$Episode <-as.integer(train$Episode)
-class(train[,11])
-dist.graph <- knn.graph(x = train[,c(1,2)], row.names = train$Episode)
 
 ```
 

@@ -74,10 +74,10 @@ adjustEpisode <- function(syn)
 ```
 
 ```{r}
-path = "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Patient/patientID_8.csv"
+path = "/Users/KVTran/Documents/Research/SlipBuddy/Individual_Patient/patientID_8.csv"
+'/Users/KVTran/Documents/Research/SlipBuddy/data/Individual_Patient/patientID_8.csv/'
 ods = prepareODS(path)
 ods = as.data.frame(ods)
-#sds = syn(ods, visit.sequence = , m = , proper = TRUE, seed = , predictor.matrix = )
 ods <- adjustEpisode(ods)
 sds = syn(ods)
 sds$syn <- adjustEpisode(sds$syn)
@@ -304,8 +304,8 @@ Generate_Synthetic_Data_For_All_Patients <- function(main.Path, write.Path, M, m
 }
 
 
-mainPath <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Patient"
-writePath <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/synth"
+mainPath <- "/Users/KVTran/Documents/Research/SlipBuddy/data/Individual_Patient"
+writePath <- "/Users/KVTran/Documents/Research/SlipBuddy/data/synth"
 m <- 30
 mySeed = 657578
 Generate_Synthetic_Data_For_All_Patients(mainPath, writePath, m, mySeed)
