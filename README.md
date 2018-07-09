@@ -73,11 +73,12 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
-## Authors
+## Authors 
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Khang V. Tran** - *Machine Learning - Researcher* - [LinkedIn](https://www.linkedin.com/in/khang-vinh-tran/)
+* **Kate Finnerty** - *Text Mining - Co-Researcher* - [LinkedIn](https://www.linkedin.com/in/finnertyk/)
+* **Quyen D Hoang** - *Android Developer - Co-Researcher* - [LinkedIn](https://www.linkedin.com/in/quyendinhthuchoang/)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ## License
 
