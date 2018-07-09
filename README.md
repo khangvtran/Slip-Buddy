@@ -17,6 +17,11 @@ iPython Jupyter Notebook
 RStudio
 ```
 
+## Poster
+The poster is presented as the final symposium. It contains brief explanation, visualization, and is the best way to understand this research on a high level perspective
+
+[Posters](poster)
+
 
 ## Researchers 
 
