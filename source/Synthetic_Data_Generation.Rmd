@@ -1,0 +1,315 @@
+---
+title: "Synthetic_Data_Generation"
+author: "Khang Vinh Tran"
+date: "6/29/2017"
+output: html_document
+---
+
+```{r}
+# install and load package with ipak function bt Steven Worthington
+# https://gist.github.com/stevenworthington/3178163
+ipak <- function(pkg)
+{
+  # This function is for attaching libraries in a vector into the session
+  # If they are not installed yet, then proceed and install them
+    new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+    if (length(new.pkg)) 
+        install.packages(new.pkg, dependencies = TRUE)
+    sapply(pkg, require, character.only = TRUE)
+}
+
+# Create a vector of library needed and attach them to the session with ipak()
+libraryList <- c("devtools","tidyverse", "tibble", "synthpop","gridExtra", "data.table", "dplyr")
+ipak(libraryList)
+
+# Create a vector of variables we are interested in
+vars <- c("AM Stress", "AM Hunger", "AM Sleep", "AM Sleep hours", 
+         "AM Weight", "Percent Weight change (from prev week)", "Percent Weight change (from prev day)", 
+         "PM Stress", "EVE Stress", 
+         "Number of Episodes Previous Day", "Episode" )
+```
+
+```{r}
+#  function ods takes in a dataset with all variables
+# return a dataset with only a set of selected variables
+makeODS <- function(data)
+{
+  vars <- c("AM Stress", "AM Hunger", "AM Sleep", "AM Sleep hours", 
+         "AM Weight", "Percent Weight change (from prev week)", "Percent Weight change (from prev day)", 
+         "PM Stress", "EVE Stress", 
+         "Number of Episodes Previous Day", "Episode" )
+  ods <- data[,vars]
+  return(ods)
+}
+#ods = makeODS(data)
+```
+
+```{r}
+prepareODS <- function(path)
+{
+  data = read_csv(path)
+  ods = makeODS(data)
+  return(ods)
+}
+```
+
+
+```{r}
+adjustEpisode <- function(syn)
+{
+  numRow <- nrow(syn)
+  for (i in 1:numRow)
+  {
+    if (syn$`Number of Episodes Previous Day`[i] == 0)
+    {
+      syn$`Episode`[i-1] = 0
+    }
+    else
+    {
+      syn$`Episode`[i-1] = 1
+    }
+  }
+  return(syn)
+}
+```
+
+```{r}
+path = "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Patient/patientID_8.csv"
+ods = prepareODS(path)
+ods = as.data.frame(ods)
+#sds = syn(ods, visit.sequence = , m = , proper = TRUE, seed = , predictor.matrix = )
+ods <- adjustEpisode(ods)
+sds = syn(ods)
+sds$syn <- adjustEpisode(sds$syn)
+sds$syn
+```
+
+
+
+```{r}
+adjustToFactor <- function(data, var1 = "Episode", var2 = "Number of Episodes Previous Day")
+{
+  # Episode and Numbe of Episode the previous day need to be as factor 
+  data[, var1] <- as.factor(data[, var1])
+  data[, var2] <- as.factor(data[, var2])
+  return(data)
+}
+
+adjustToFactor_Mod <- function(data, vars)
+{
+  n = length(vars)
+  for (i in 1:n)
+  {
+    var = vars[i]
+    if (var !=  "AM Sleep hours" & var != "AM Weight" & var != "Percent Weight change (from prev week)" & var!= "Percent Weight change (from prev day)")
+    data[, var] <- as.factor(data[, var])
+  }
+  return(data)
+}
+
+```
+
+
+```{r}
+cmp <- function(ods, sds, vars)
+{
+  for (i in 1:length(vars))
+  {
+    cmp = compare(sds, ods, vars[i])
+    print(cmp[1])
+    print(cmp[2])
+  }
+}
+```
+
+
+```{r}
+
+# The last two variables (Number of Episode the Prev day and Episode) must be adjusted to Factor
+ods = adjustToFactor(ods)
+sds$syn = adjustToFactor(sds$syn)
+
+
+# Plot the points of each record in the observed data set vs the synthetic data set.
+# Fit a linear model into the data
+
+# Am Stress and AM Hunger
+plot1 <- ggplot(data = ods, aes(x = `AM Stress`, y = `AM Hunger`, col = `Episode`)) +
+  geom_point() +
+  geom_smooth(method = glm) + 
+  ggtitle(label = "Observed Data")
+plot1.synth =  ggplot(data = sds$syn, aes(x = `AM Stress`, y = `AM Hunger`, col = `Episode`)  ) + 
+  geom_point() +
+  geom_smooth(method = glm) +
+  ggtitle("Synthetic Data")
+grid.arrange(plot1, plot1.synth, nrow = 2) 
+  
+
+# AM Sleep and AM Sleep Hours
+plot2 <- ggplot(data = ods, aes(x = `AM Sleep`, y = `AM Sleep hours`, col = `Episode`)) +
+  geom_point() +
+  geom_smooth(method = glm) +
+  ggtitle(label = "Observed Data")
+plot2.synth =  ggplot(data = sds$syn, aes(x = `AM Sleep`, y = `AM Sleep hours`, col = `Episode`)  ) + 
+  geom_point() +
+  geom_smooth(method = glm) + 
+  ggtitle("Synthetic Data")
+grid.arrange(plot2, plot2.synth, nrow = 2)
+
+#PM Stress and EVE Stress
+plot3 <- ggplot(data = ods, aes(x = `PM Stress`, y = `EVE Stress`, col = `Episode`)) +
+  geom_point() +
+  geom_smooth(method = glm) + 
+  ggtitle(label = "Observed Data")
+plot3.synth =  ggplot(data = sds$syn, aes(x = `PM Stress`, y = `EVE Stress`, col = `Episode`)  ) + 
+  geom_point() +
+  geom_smooth(method = glm) + 
+  ggtitle("Synthetic Data")
+grid.arrange(plot3, plot3.synth, nrow = 2)
+```
+
+
+```{r}
+call <- sds$call
+m <- sds$m
+method <- sds$method
+predictor.matrix <- sds$predictor.matrix
+print(method)
+print(predictor.matrix)
+```
+
+```{r}
+# Plot the Histogram of frequency, variable by variable. Notice: Multiple vars Must be adjusted to factor before starting
+adjustToFactor_Mod(ods, vars)
+sds$syn = adjustToFactor_Mod(sds$syn, vars)
+```
+
+
+
+
+###################################################################################
+############  TEST: GENERATE SYNTHETIC DATA FOR MULTIPLE SETS  ####################
+###################################################################################
+```{r}
+#sds = syn(ods, visit.sequence = , m = , proper = TRUE, seed = , predictor.matrix = )
+my.seed = 1
+sds = syn(ods, m = 4, seed = my.seed)
+sds$syn
+# STRONG NOTICE: Proper = TRUE will cause Subscript to be out of bound with seed != 1357
+```
+
+```{r}
+my.seed = 83781263
+M = 50
+# STRONG NOTICE: Proper = TRUE will cause Subscript to be out of bound
+adjustToFactor_Mod(ods, vars)
+sds = syn(ods, m = M, seed = my.seed)
+sds$syn <- lapply(sds$syn, function(df) mutate_at(df, .vars = c(1:5,8,9), as.factor))
+sds$syn
+```
+
+```{r}
+# Print the frequentcy histogram, compare those of ods and sds side by side
+cmp(ods, sds, vars)
+```
+
+```{r}
+# fit a generalized linear model into the syn dataset
+# Choosing Generalized Linear Model since there is an uncertainty that the response variable (Episode) is Normally distributed or not
+# set family to binomial since we have only 2 outcomes for Episode
+sds$syn <- lapply(sds$syn, function(df) mutate_at(df, .vars = c(1:5,8,9), as.numeric))
+
+fsds <- glm.synds(formula = I(Episode == 1) ~ `AM Stress` + `AM Hunger` + `AM Sleep` + `AM Sleep hours` +
+                                    `AM Weight` + `Percent Weight change (from prev week)` + `Percent Weight change (from prev day)` + `PM Stress` + `EVE Stress` + `Number of Episodes Previous Day`, data = sds, family = "binomial")
+
+
+# Examine the Beta (regression coefficient) associated with each variable.
+# Also provide a standard deviation and from that, we compute the z-score. 
+# If the z score is far away enough to yield a p-value > alpha, we reject the null hypothesis that Beta = 0
+# Hence, the variable is affective interm of predicting Episode
+summary(fsds)
+
+# plot the z score comparision
+compare(fsds, ods)
+
+```
+
+
+```{r}
+################
+# TESTING AREA #
+################
+
+# Save a the dataframe into a csv file.
+write.csv(x = sds$syn, file = "test.csv")
+# => When saving multiple dataframe in this fashion, the data will be aligned horizontally 
+# => not suitable for the purpose of the research
+class(as.data.frame(sds$syn[1]))
+a = as.data.frame(sds$syn[1])
+a
+
+M = 8 
+for (i in 1:M)
+{
+  df = as.data.frame(sds$syn[i])
+  print(colnames(df))
+  colnames(df) = c("AM Stress", "AM Hunger", "AM Sleep", "AM Sleep hours",
+                   "AM Weight", 
+                   "Percent Weight change (from prev week)", "Percent Weight change (from prev day)",
+                   "PM Stress", "EVE Stress",
+                   "Number of Episodes Previous Day", "Episode")
+  print(colnames(df))
+  print(df)
+  df = adjustEpisode(df)
+  print(df)
+  break
+}
+```
+
+########################################################################################################
+################  AUTOMATING THE PROCESS OF GENERATING SYNTHETIC DATA  #################################
+########################################################################################################
+```{r}
+Generate_Synthetic_Data_For_All_Patients <- function(main.Path, write.Path, M, my.Seed)
+{
+  file.Names <- list.files(path = main.Path, pattern = "*.csv")
+  len <- length(file.Names)
+  for (i in 1:len)
+  {
+    #print(paste(main.Path, file.Names[i], sep='/'))
+    full.Path = paste(main.Path, file.Names[i], sep ='/')
+    assign(x = file.Names[i], value = read_csv(full.Path))
+    buf = as.data.frame(read_csv(full.Path))
+    ods = makeODS(buf)
+    ods = adjustEpisode(ods)
+    sds = syn(data = ods, m = M, seed = my.Seed)
+    df.Out <- data.frame()
+    #print(df.Out)
+    for (j in 1:M)
+    {
+      df = as.data.frame(sds$syn[j])
+      colnames(df) = c("AM Stress", "AM Hunger", "AM Sleep", "AM Sleep hours",
+                     "AM Weight", 
+                     "Percent Weight change (from prev week)", "Percent Weight change (from prev day)",
+                     "PM Stress", "EVE Stress",
+                     "Number of Episodes Previous Day", "Episode")
+      df = adjustEpisode(df) 
+      df = adjustToFactor(df)
+      df.Out = rbind(df.Out, df)
+    }
+    #write.Path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/synth"
+    write.Path <- paste(writePath, file.Names[i], sep = "/")
+    write.csv(x = df.Out, file = write.Path, row.names = FALSE)
+  }
+}
+
+
+mainPath <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Patient"
+writePath <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/synth"
+m <- 30
+mySeed = 657578
+Generate_Synthetic_Data_For_All_Patients(mainPath, writePath, m, mySeed)
+
+```
+
+

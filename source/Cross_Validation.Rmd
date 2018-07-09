@@ -1,0 +1,574 @@
+---
+title: "CrossValidation"
+author: "Khang Vinh Tran"
+date: "7/19/2017"
+output: html_document
+---
+
+
+```{r}
+#install.packages("ggplot2")
+
+```
+
+```{r}
+# source all the neccesaary files and script
+source(file = "ipak.R") # ipak developed by Steven Worthington:
+#https://gist.github.com/stevenworthington/3178163
+
+# rattle package requires separate installation. After running install.packages(), select "y" as being prompted
+#install.packages("rattle")
+# Create a vector of library needed and attach them to the session with ipak()
+libraryList <- c("devtools","tidyverse", "tibble", "synthpop","gridExtra",
+                 "data.table", "dplyr", "caret","rpart", "class",
+                 "rpart.plot", "RColorBrewer", "ROCR", "pROC")
+ipak(libraryList)
+
+source("fancyRPartPlot.R") # fancyRpartPlot developed by gjwgit: https://github.com/cran/rattle/blob/master/R/fancyRpartPlot.R
+# source the Synthetic Data Generation script
+source(file = "rmd2rscript.R")
+#rmd2rscript(infile = "Synthetic_Data_Generation.Rmd")
+source(file = "Synthetic_Data_Generation.R")
+```
+
+```{r}
+# define an array of variables' names
+vars <- c("AM Stress", "AM Hunger", "AM Sleep", "AM Sleep hours", "AM Weight",
+          "Percent Weight change (from prev week)", "Percent Weight change (from prev day)",
+          "PM Stress", "EVE Stress", "Number of Episodes Previous Day",
+          "Episode" )	
+```
+
+
+
+##############################################################
+#################### CROSS VALIDATION ########################
+##############################################################
+
+#########################
+########## KNN ##########
+#########################
+
+```{r}
+# Normalize all predictive variables
+normalize <- function(x){
+  # print(max(x))
+  # print(min(x))
+  # print("*****************")
+  if (max(x) == min(x)){
+    return(0.5)
+  }
+  return( (x-min(x))/(max(x) - min(x)) )
+}
+
+# Get the number of neareast neighbor
+Get_Num_NN <- function(n){
+  # n is number of records in both testing and training set
+  n <- round(sqrt(n))
+  if (n %%2 == 0) {
+    n = n+1
+  }
+  return(n)
+}
+
+
+Classisfy_KNN <- function(train, test)
+{ 
+  # ###########################
+  #Convert NumEpthePrevDay to integer
+  train[,(ncol(train)-1)] <- as.integer( as.character((train[,(ncol(train)-1)])) )
+  test[,(ncol(test)-1)] <- as.integer( as.character(test[,(ncol(test)-1)]))
+  #print(train)
+  train_predictors <- as.data.frame(lapply(train[ , (1:ncol(train) -1) ], normalize))
+  train_targets <- train[ , ncol(train)]
+  test_predictors <- as.data.frame(lapply(test[ , (1:ncol(train) -1) ], normalize))
+  test_targets <- test[ , ncol(test)] 
+  # print(any(is.na(test_predictors)))  ######
+  # print(sapply(test_predictors, function(x) sum(is.na(x)))) ######
+  # print(dim(test_predictors)) ######
+  # print(test_predictors) ######
+  numRecords <- Get_Num_NN(nrow(train) + nrow(test))
+  preds <- knn(train = train_predictors, test = test_predictors, cl = train_targets, k = numRecords)
+  return(preds)
+}
+
+
+# train <- read.csv("/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_DecisionTree/Train/patientID_3/Real_Training_For_Fold1.csv")
+# test <- read.csv("/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_DecisionTree/Test/patientID_3/Fold1.csv")
+# preds <- Classisfy_KNN(train, test)
+# conf <- table(test$Episode, preds)
+# conf <- conf[2:1, 2:1]
+# conf
+```
+
+
+```{r}
+
+Test_Each_Fold <- function(test, train, trainSynth, trainSynthCombined, result.Cols, method)
+{ 
+  fold.Result <- data.frame(matrix(0 ,nrow = 1, ncol = length(result.Cols)))
+  colnames(fold.Result) <- result.Cols
+  CP = 0.01
+  CONTROL <- rpart.control(cp = CP)
+  start.Index = 1
+  train.List <- list(train, trainSynth, trainSynthCombined)
+  for (train.Set in train.List)
+  {
+    ######################  CONDITIONAL FOR TESTING EITHER TREE OR KNN HERE #############
+    if (method == "tree"){
+      tree <- rpart(Episode ~ ., train.Set, method = "class", control = CONTROL)
+      preds <- predict(object = tree, newdata = test, type = "class" )
+    } 
+      else if (method == "knn"){
+        preds <- Classisfy_KNN(train.Set, test)
+      }
+
+    #####################################################################################
+    conf <- table(test$Episode, preds)
+    conf <- conf[2:1, 2:1]
+    # calculate and append accuracy
+    acc <- sum(diag(conf)) / (sum(conf))
+    fold.Result[,start.Index] = acc
+    # calculate and append precision
+    prec <- conf[1,1] / (sum(conf[,1])) 
+    fold.Result[, start.Index + 3] = prec
+    # calculate and append recall
+    recall <- conf[1,1] / (sum(conf[1,]))
+    fold.Result[,start.Index + 6] = recall
+    # calculate and append fallout
+    fallout <- conf[2,1]/(sum(conf[2,]))
+    fold.Result[,start.Index + 9] = fallout
+    # calculate the other Performance measurements:
+    FMeasure <- 2*(prec * recall) / (prec + recall)
+    fold.Result[,start.Index + 12] = FMeasure
+    
+    # CALCULATE AUC
+    pred <- as.numeric(preds) - 1
+    labels <- as.numeric(test$Episode) - 1
+    ROC_auc <- performance(prediction(pred, labels), "auc")
+    AUC <- ROC_auc@y.values[[1]]
+    fold.Result[,start.Index + 15] = AUC
+    
+    # INCREASE START.INDEX BY 1
+    start.Index = start.Index + 1
+  }
+# AT THE END OF THIS FUNCTION, RETURN THE RESULT FOR THAT FOLD (1 ROW)
+  fold.Result <- round(x = fold.Result, digits = 3)
+  return(fold.Result)
+}
+
+```
+
+
+
+```{r}
+KFolds_Cross_Validate <- function(main.Path, K, M, vars, my.Seed, is.Group = FALSE, method)
+{
+  if (missing(method)){
+     stop("Need to specify method to either 'tree' or 'knn'.")
+  }
+  set.seed(my.Seed)
+  
+  # CREATE THE FIRST LAYER OF FOLDER (test, train, train_synth, result, result_synth)
+  if (is.Group == FALSE){
+    indi.Path <- file.path(main.Path, "Individual_Patient")
+  }
+  else {
+    indi.Path <- file.path(main.Path, "Group")
+  }
+  test.Path <- file.path(main.Path, "Test")
+  train.Path <- file.path(main.Path, "Train")
+  trainSynth.Path <- file.path(main.Path, "Train_Synth")
+  trainSynthCombined.Path <- file.path(main.Path, "Train_Synth_Combined")
+  result.Path <- file.path(main.Path, "Result")
+  #ResultSynth.Path <- file.path(main.Path, "Result_Synth")
+  Paths <- c(test.Path, train.Path, trainSynth.Path, trainSynthCombined.Path, result.Path)
+  for (path in Paths)
+  {
+    dir.create(path, showWarnings = FALSE)
+  }
+  
+  # COLLECT ALL THE NAMES OF THE OBSERVED DATA FILES
+  file.Names <- list.files(path = indi.Path, pattern = "*.csv")
+  len <- length(file.Names)
+  for (i in 1:len)   # LEN IS THE NUMBER OF DATASETS (EACH PATIENT HAS ONE DATASET)
+  {
+    # CREATE THE SECOND LAYER OF FOLDERS
+    for (path in Paths)
+    {
+      dir.create(file.path(path, gsub(".csv", "", file.Names[i])), showWarnings = FALSE)
+    }
+    
+    # READ IN THE OBSERVED DATA 
+    full.Path <- file.path(indi.Path, file.Names[i])
+    assign(x = file.Names[i], value = read.csv(full.Path, check.names = FALSE))
+    ods <- get(file.Names[i])
+    ods <- ods[,vars]
+    # CONVERT EPISODE AND NUMBER OF EP THE PREV DAY TO FACTOR, AND ALL OTHER VARIABLES EXCEPT FOR PERCENTAGE OF WEIGHT CHANGED INTO INTEGER
+    ods[, c(1,2,3,4,5,8,9) ] <- lapply(ods[, c(1,2,3,4,5,8,9) ], as.integer)
+    ods <- adjustToFactor(ods)
+    # CREATE INDICES FOR CROSS VALIDATION FOLDS
+    indices.List <- createFolds(y = ods$Episode, k = K)
+    # GET THE LIST FOR ALL FOLD NAMES (FOLD1, FOLD2, FOLD3, ...)
+    foldNames.List <- names(indices.List)
+    
+    # CREATE THE EMPTY RESULT TABLE FOR THIS PATIENT HERE
+    result.Cols <- c("Accuracy", "AccuracySynth", "AccuracySynthCombined",
+                    "Precision", "PrecisionSynth", "PrecisionSynthCombined",
+                    "Recall","RecallSynth", "RecallSynthCombined",
+                    "Fallout", "FalloutSynth", "FalloutSynthCombined",
+                    "FMeasure", "FMeasureSynth", "FMeasureSynthCombined",
+                    "AUC", "AUCSynth", "AUCSynthCombined")
+    Result <- data.frame()
+  
+    for (j in 1:K)  # K IS THE NUMBER OF FOLDS
+    {
+      indices <- as.numeric(unlist(indices.List[j]))
+      foldName <- foldNames.List[j]
+      # CREATE AND AND WRITE TEST
+      test <- ods[indices, ]
+      write.csv(x = test, 
+                file = file.path(test.Path,
+                                 gsub(".csv", "", file.Names[i]),
+                                 paste(foldName, ".csv", sep = "")),
+                row.names = FALSE)
+      # CREATE AND WRITE TRAIN FILE
+      train <- ods[-indices, ]
+      write.csv(x = train, 
+                file = file.path(train.Path,
+                                 gsub(".csv", "", file.Names[i]),
+                                 paste("Real_Training_For_",foldName, ".csv", sep = "")),
+                row.names = FALSE)
+      # CREATE AND WRITE THE SYNTHETIC TEST FILE
+      sds <- syn(data = train, m = M, seed = my.Seed)
+      trainSynth <- data.frame()
+      for (k in 1:M)  # M IS THE NUMBER OF SYNTHETIC SET CREATED
+      {
+        df <- as.data.frame(sds$syn[k])
+        colnames(df) <- vars
+        df <- adjustToFactor(df)
+        trainSynth <- rbind(trainSynth, df)
+      }
+      write.csv(x = trainSynth, 
+                file = file.path(trainSynth.Path,
+                                 gsub(".csv", "", file.Names[i]),
+                                 paste("Synth_Training_For_", foldName, ".csv", sep = "")),
+                row.names = FALSE) 
+      # CREATE AND WRITE THE COMBINED SYNTHETIC-REAL DATA TRAINIGN SET
+      trainSynthCombined <- rbind(train, trainSynth)
+      write.csv(x = trainSynthCombined, 
+                file = file.path(trainSynthCombined.Path,
+                                 gsub(".csv", "", file.Names[i]),
+                                 paste("Combined_Training_For_", foldName, ".csv", sep = "")),
+                row.names = FALSE)     
+      
+      # RUN THE MODEL HERE, APPEND THE TEST RECORD (1 ROW) TO THE RESULT TABLE
+      print(file.Names[i])
+      print(foldName)
+      fold.Result <- Test_Each_Fold(test, train, trainSynth, trainSynthCombined, result.Cols, method)
+      Result <- rbind(Result, fold.Result)
+     
+    }
+    # WRITE THE RESULT TABLE HERE
+    write.csv(x = Result,
+              file = file.path(result.Path, gsub(".csv", "", file.Names[i]), "Result.csv"),
+              row.names = FALSE)
+  }
+}
+```
+
+
+##############################################################
+#################### THE T-TEST FUNCTIONS ####################
+##############################################################
+
+```{r}
+T_Test <- function(X, Y, mu, CL)
+{
+  n <- length(X)
+  df <- n - 1
+  d <- Y - X
+  d.Bar <- mean(d)
+  SD <- sd(d)
+  SE <- SD/(sqrt(n))
+  t <- (d.Bar-mu)/SE
+  #print(d)
+  #print(d.Bar)
+  # TEST IF MEAN X AND Y EQUAL. OTHERWISE, TEST IF MEAN(Y) IS GREATER THAN MEAN(X)
+  conclusion <- ""
+  lower.Qt <- (1-CL)/2
+  upper.Qt <- CL + lower.Qt
+  Critical.Value <- qt(upper.Qt, df)
+  CI.UpperBound <- round((d.Bar + Critical.Value*SE), digits = 3)
+  CI.LowerBound <- round((d.Bar - Critical.Value*SE), digits = 3)
+  if (is.na(t))
+  {
+    conclusion <- "No Conclusion"
+  }
+  else
+  {
+    if (t > -Critical.Value && t < Critical.Value)
+    {
+      conclusion = "="
+    } else if(t > Critical.Value){
+      upper.Qt <- CL
+      Critical.Value <- qt(upper.Qt, df)
+      if (t > Critical.Value)
+      {
+        conclusion = ">"
+      } 
+    } else if (t < -Critical.Value) {
+      upper.Qt <- (1-CL)
+      Critical.Value <- qt(upper.Qt, df)
+       if (t < -Critical.Value)
+      {
+        conclusion = "<"
+       }
+    } else {
+         conclusion = "No Conclusion"
+       }
+  }
+  t <- round(t, 3)
+  Critical.Value <- round(Critical.Value, 3)
+  result <- data.frame(CI.LowerBound, CI.UpperBound,
+                       t, Critical.Value,
+                       conclusion)
+  names(result)[names(result) == 'Critical.Value'] <- 'Critical.Value (+-)'
+  #print(colnames(result))
+  return(result)
+}
+
+```
+
+
+```{r}
+Get_Row_Name <- function(name1, name2)
+{
+  rowName <- paste("Paired Mean of ", name1, " vs.", name2, sep = "")
+  return(rowName)
+}
+
+T_Test_Whole_Table <- function(data, mu, CL)
+{
+  col.Names <- colnames(data)
+  row.Names <- c()
+  result <- data.frame()
+  numCol <- ncol(data)
+  indices <- seq(1, numCol, 3)
+  for (i in indices)
+  {
+    #print(i)
+    X <- data[,i]
+    Y <- data[,i+1]
+    buf <- T_Test(X, Y, mu, CL)
+    result <- rbind(result, buf)
+    row.Names <- c(row.Names, Get_Row_Name(col.Names[i], col.Names[i+1]))
+       
+    #print("**")
+    X <- data[,i]
+    Y <- data[,i+2]
+    buf <- T_Test(X, Y, mu, CL)
+    result <- rbind(result, buf)
+    row.Names <- c(row.Names, Get_Row_Name(col.Names[i], col.Names[i+2]))
+  
+    #print("***")
+    X <- data[,i+1]
+    Y <- data[,i+2]
+    buf <- T_Test(X, Y, mu, CL)
+    result <- rbind(result, buf)
+    row.Names <- c(row.Names, Get_Row_Name(col.Names[i+1], col.Names[i+2]))
+  }
+  row.names(x = result) <- row.Names
+  #print(result)
+  return(result)
+}
+
+
+```
+
+
+```{r}
+
+T_Test_All_Result <- function(allResult.Path, mu, CL)
+{
+  individuals.Array <- list.files(path = allResult.Path, pattern = NULL)
+  for (individual in individuals.Array)
+  {
+    #print(individual)
+    indiResult.Path <- file.path(allResult.Path, individual, "Result.csv")
+    #print(indiResult.Path)
+    CrossValidation_Result <- read.csv(indiResult.Path)
+    T_Test_Result <- T_Test_Whole_Table(CrossValidation_Result, mu, CL)
+    write.csv(x = T_Test_Result, file = file.path(allResult.Path, individual, "T_Test_Result.csv"))
+  }
+}
+```
+
+
+
+
+
+
+
+
+###################################################################
+############################ MAIN CODE ############################ 
+###################################################################
+
+```{r}
+K = 5
+M = 8 #  40 TALK ABOUT THE LEVEL OF M THAT WILL UP THE ACCURACY 
+my.Seed = 1
+```
+
+
+```{r}
+main.Path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_DecisionTree"
+KFolds_Cross_Validate(main.Path, K, M, vars, my.Seed, method = "tree")
+```
+
+```{r}
+mu <- 0
+CL <- 0.95
+allResult.Path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_DecisionTree/Result"
+T_Test_All_Result(allResult.Path, mu, CL)
+```
+
+
+```{r}
+main.Path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_KNN"
+KFolds_Cross_Validate(main.Path, K, M, vars, my.Seed, method = "knn")
+```
+
+
+
+```{r}
+mu <- 0
+CL <- 0.95
+allResult.Path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_KNN/Result"
+T_Test_All_Result(allResult.Path, mu, CL)
+```
+
+
+
+```{r}
+# main.Path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Group_Analysis"
+# K = 10
+# M = 8  #  40 TALK ABOUT THE LEVEL OF M THAT WILL UP THE ACCURACY 
+# my.Seed = 0
+# set.seed(my.Seed)
+# KFolds_Cross_Validate(main.Path, K, M, vars, my.Seed, is.Group = TRUE)
+```
+
+#################################################
+# VISUALLIZATION FOR THE POSTER - DECISION TREE #
+#################################################
+
+```{r}
+path <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_DecisionTree/Train_Synth_Combined/patientID_15/Combined_Training_For_Fold3.csv"
+train <- read_csv(file = path)
+train$Episode <-as.factor(train$Episode)
+CP = 0.007
+CONTROL <- rpart.control(cp = CP)
+tree <- rpart(Episode ~., train, method = "class", control = CONTROL)
+fancyRpartPlot(tree)
+```
+
+
+#######################################
+# VISUALLIZATION FOR THE POSTER - KNN #
+########################################
+```{r}
+library(sp) 
+library("GeNetIt")
+data(ralu.site)
+
+ # Saturated spatial graph
+sat.graph <- knn.graph(ralu.site, row.names=ralu.site@data[,"SiteName"])
+head(sat.graph@data)
+ 
+ # Distanced constrained spatial graph
+ dist.graph <- knn.graph(ralu.site, row.names=ralu.site@data[,"SiteName"], max.dist = 5000)
+
+ par(mfrow=c(1,2))	
+plot(sat.graph, col="grey")
+  points(ralu.site, col="red", pch=20, cex=1.5)
+     box()
+     title("Saturated graph")	
+plot(dist.graph, col="grey")
+  points(ralu.site, col="red", pch=20, cex=1.5)
+     box()
+     title("Distance constrained graph")	
+
+head(ralu.site)
+ralu.site@data[,"SiteName"]
+ralu.site@data
+dim(ralu.site)
+length(ralu.site@data[,"SiteName"])
+dim(train)
+length(train[,11])
+
+train$Episode <-as.integer(train$Episode)
+class(train[,11])
+dist.graph <- knn.graph(x = train[,c(1,2)], row.names = train$Episode)
+
+```
+
+
+
+##########################################
+# VISUALLIZATION FOR THE POSTER - T-Test #
+##########################################
+
+```{r}
+
+path_Tree <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_DecisionTree/Result/patientID_15/T_Test_Result.csv"
+print(path_Tree)
+t_Tree <- read.csv(file = path_Tree)
+t_Tree <- na.omit(t_Tree)
+t_Tree <- t_Tree$t
+
+
+path_KNN <- "/Users/KVTran/Documents/Research/WPI/Slip_Buddy/REU_2017/data/Individual_Analysis_KNN/Result/patientID_15/T_Test_Result.csv"
+print(path_KNN)
+t_KNN <- read.csv(file = path_KNN)
+t_KNN <- na.omit(t_KNN)
+t_KNN <- t_KNN$t
+t_KNN
+
+
+x = data.frame(x = c(-4, 4))
+p9 <- ggplot(x, aes(x = x)) +
+        stat_function(fun = dt, args = list(df = 4)) +
+        geom_vline(xintercept = 2.776,  color = "indianred4", size = 1.25) + 
+        geom_vline(xintercept = -2.776,  color = "indianred4", size = 1.25) +
+        scale_x_continuous(breaks = round(seq(min(x), max(x), by = 0.5),1)) + 
+  geom_vline(xintercept = 0.563, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = 0.563, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = -1, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = 1, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = -0.813, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = -0.571, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = 1, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = -0.87, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = 0.583, linetype = "dashed", color = "deepskyblue3", size = 0.5) + 
+  geom_vline(xintercept = 1, linetype = "dashed", color = "deepskyblue3", size = 0.5) +
+    geom_vline(xintercept = 0.008, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = -1, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = -1, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = 1, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = -1, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = 1, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = 1, linetype = "dashed", color = "mediumorchid", size = 0.5) +
+    geom_vline(xintercept = -0.749, linetype = "dashed", color = "mediumorchid", size = 0.5) 
+#p9
+
+cols <- c("Critical Value (+-)" = "indianred4", "KNN t-Statistics" = "mediumorchid", "Decision Tree t-Statistics" = "deepskyblue3")
+p9 + scale_colour_manual(values = cols)
+p9
+```
+
+
+
+
+
